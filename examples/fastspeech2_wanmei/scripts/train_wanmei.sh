@@ -1,0 +1,12 @@
+CUDA_VISIBLE_DEVICES=0 python examples/fastspeech2_wanmei/train_fastspeech2.py \
+  --train-dir ./dump_wanmei/train/ \
+  --dev-dir ./dump_wanmei/valid/ \
+  --outdir ./examples/fastspeech2_wanmei/outdir_libri/ \
+  --config ./examples/fastspeech2_wanmei/conf/fastspeech2wanmei.yaml \
+  --use-norm 1 \
+  --f0-stat ./dump_wanmei/stats_f0.npy \
+  --energy-stat ./dump_wanmei/stats_energy.npy \
+  --mixed_precision 1 \
+  --dataset_config preprocess/wanmei_preprocess.yaml \
+  --dataset_mapping dump_wanmei/wanmei_mapper.json \
+  --dataset_stats dump_wanmei/stats.npy
