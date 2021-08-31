@@ -1,2 +1,2 @@
-# Pytorch_TTS
+# Chinese_TTS
 pytorch for TTS (including Chinese English and other languages)
