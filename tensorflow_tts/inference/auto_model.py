@@ -92,7 +92,6 @@ class TFAutoModel(object):
 
                 pretrained_path = downloaded_file
 
-
         assert config is not None, "Please make sure to pass a config along to load a model from a local file"
 
         for config_class, model_class in TF_MODEL_MAPPING.items():

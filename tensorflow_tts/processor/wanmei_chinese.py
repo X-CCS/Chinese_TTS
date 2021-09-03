@@ -20,6 +20,7 @@ import re
 import numpy as np
 import soundfile as sf
 from dataclasses import dataclass
+from pypinyin import pinyin, Style
 
 from tensorflow_tts.processor.base_processor import BaseProcessor
 from tensorflow_tts.utils.utils import PROCESSOR_FILE_NAME
@@ -28,6 +29,24 @@ from tensorflow_tts.text.symbols import symbols
 from tensorflow_tts.text import wanmei_text_to_sequence
 
 WANMEI_SYMBOLS = symbols
+
+zhongwen_pattern = re.compile("[\u4e00-\u9fa5]") 
+ 
+def is_zh(word): 
+    global zh_pattern 
+    match = zhongwen_pattern.search(word)
+    return match is not None
+
+def read_lexicon(lex_path):
+    lexicon = {}
+    with open(lex_path) as f:
+        for line in f:
+            temp = re.split(r"\s+", line.strip("\n"))
+            word = temp[0]
+            phones = temp[1:]
+            if word.lower() not in lexicon:
+                lexicon[word.lower()] = phones
+    return lexicon
 
 @dataclass
 class WanmeiProcessor(BaseProcessor):
@@ -41,6 +60,9 @@ class WanmeiProcessor(BaseProcessor):
     }  # positions of file,text,speaker_name after split line
     f_extension: str = ".wav"
     cleaner_names: str = None
+
+    def __init__(self, data_dir=None, loaded_mapper_path=None):
+        self.lexicon = read_lexicon("./lexicon/pinyin-lexicon-r.txt")
 
     def create_items(self):
         with open(
@@ -90,12 +112,37 @@ class WanmeiProcessor(BaseProcessor):
         self._save_mapper(os.path.join(saved_path, PROCESSOR_FILE_NAME), {})
 
     def text_to_sequence(self, text):
-        new_text = "{" + text + "}"
-        cleaners = []
-        text_ids = np.array(chinese_text_to_sequence(new_text, cleaners))
+        # is Chinese characters
+        is_translate_pinyin = False
+        data = text.split()
+        for per_char in data:
+            if is_zh(per_char):
+                is_translate_pinyin = True
+                break
+
+        if is_translate_pinyin is True:
+            # chinese character -> pinyin
+            phones = []
+            pinyins = [
+                p[0]
+                for p in pinyin(
+                    text, style=Style.TONE3, strict=False, neutral_tone_with_five=True
+                )
+            ]
+            for p in pinyins:
+                if p in self.lexicon:
+                    phones += self.lexicon[p]
+                else:
+                    phones.append("PAUSE")
+            text = " ".join(phones)
+
+        text = ' '.join(text.split())
+        text_ids = np.asarray(wanmei_text_to_sequence(text), np.int32)
         
-        print("text is :", text)
-        print("text_ids is :", text_ids)
+        # reshape
+        text_ids = text_ids.reshape(text_ids.shape[0]*text_ids.shape[1],)
+
+        return text_ids
 
     def inference_text_to_seq(self, text: str):
         return self.symbols_to_ids(self.text_to_ph(text))

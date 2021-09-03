@@ -164,7 +164,9 @@ class BasedTrainer(metaclass=abc.ABCMeta):
     def _check_eval_interval(self):
         """Evaluation interval step."""
         if self.steps % self.config["eval_interval_steps"] == 0:
-            self._eval_epoch()
+            if self.config["is_eval"]:
+                self._eval_epoch()
+
 
     def _check_save_interval(self):
         """Save interval checkpoint."""
@@ -641,14 +643,14 @@ class GanBasedTrainer(BasedTrainer):
         if self.steps >= self.config["train_max_steps"]:
             self.finish_train = True
 
-        if (
-            self.steps != 0
-            and self.steps == self.config["discriminator_train_start_steps"]
-        ):
-            self.finish_train = True
-            logging.info(
-                f"Finished training only generator at {self.steps}steps, pls resume and continue training."
-            )
+        #if (
+        #    self.steps != 0
+        #    and self.steps == self.config["discriminator_train_start_steps"]
+        #):
+        #    self.finish_train = True
+        #    logging.info(
+        #        f"Finished training only generator at {self.steps}steps, pls resume and continue training."
+        #    )
 
     def _check_log_interval(self):
         """Log to tensorboard."""

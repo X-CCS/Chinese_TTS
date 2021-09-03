@@ -79,6 +79,7 @@ gradient_accumulation_steps: 1
 ###########################################################
 train_max_steps: 4000000                # Number of training steps.
 save_interval_steps: 3               # Interval steps to save checkpoint.
+is_eval: False
 eval_interval_steps: 2              # Interval steps to evaluate the network.
 log_interval_steps: 1                # Interval steps to record the training log.
 discriminator_train_start_steps: 0     # step to start training discriminator.
